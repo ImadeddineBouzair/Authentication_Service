@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const sendEmail = require('../utils/nodeMailer');
-const { use } = require('../routes/userRoutes');
 
 const asyncVerify = (token) => {
   return new Promise(function (resolve, reject) {
@@ -66,7 +65,7 @@ exports.signIn = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!(email && password))
-    return next(new AppError('Email and password fields are required!'));
+    return next(new AppError('Email and password fields are required!', 400));
 
   const user = await User.findOne({ email }).select('+password');
 
@@ -86,7 +85,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   if (!token)
     return next(
-      new AppError('You are not logged in, Pleas logIn to get access!')
+      new AppError('You are not logged in, Pleas logIn to get access!', 401)
     );
 
   const decodedToken = await asyncVerify(token);
@@ -99,7 +98,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   // Check if the password has been changed
   if (currentUser.checkIfPasswordChanged(decodedToken.iat))
     return next(
-      new AppError('User recently changed password, Pleas log in again!')
+      new AppError('User recently changed password, Pleas log in again!', 401)
     );
 
   req.user = currentUser;
@@ -182,7 +181,7 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   const { currentPassword, newPassword, passwordConfirm } = req.body;
 
   if (!(await user.comparePassword(currentPassword)))
-    return next(new AppError('Current password is wrong, Try again!'));
+    return next(new AppError('Current password is wrong, Try again!', 401));
 
   user.password = newPassword;
   user.passwordConfirm = passwordConfirm;
@@ -190,3 +189,15 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 
   createSendToken(user, 200, res);
 });
+
+exports.restricTo =
+  (...roles) =>
+  (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError(`You don't have permission to perform this action!`, 403)
+      );
+    }
+
+    next();
+  };
