@@ -44,6 +44,10 @@ const handleDuplicateKeysDB = (err) => {
   return new AppError(message, 400);
 };
 
+const handleJWTError = (err) => {
+  return new AppError(`${err.message}, Pleas log in again!`, 401);
+};
+
 module.exports = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status;
@@ -57,6 +61,7 @@ module.exports = (err, req, res, next) => {
 
     if (error.name === 'ValidationError') error = handleValidationError(error);
     if (error.code === 11000) error = handleDuplicateKeysDB(error);
+    if (error.name === 'JsonWebTokenError') error = handleJWTError(error);
 
     sendErrorProd(error, res);
   }

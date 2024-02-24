@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -42,6 +43,10 @@ const userSchema = new mongoose.Schema({
   },
 
   passwordChangedAt: Date,
+
+  passwordResetToken: String,
+
+  passwordResetExpires: Date,
 });
 
 userSchema.pre('save', async function (next) {
@@ -53,6 +58,46 @@ userSchema.pre('save', async function (next) {
 
   next();
 });
+
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordChangedAt = Date.now() - 1000;
+
+  next();
+});
+
+// Inheretans methods
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+userSchema.methods.checkIfPasswordChanged = function (jwtIat) {
+  if (this.passwordChangedAt) {
+    // getTime() method will convert date to milliseconds, And jwtIat in "seconds" so we need to convert the number to seconds (in bace 10 integer) with that we can compare
+    const convertingToSeconds = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+
+    return convertingToSeconds > jwtIat;
+  }
+
+  return false;
+};
+
+userSchema.methods.generatePasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  this.passwordResetExpires = Date.now() + 5 * 60 * 1000;
+
+  return resetToken;
+};
 
 const User = new mongoose.model('User', userSchema);
 
