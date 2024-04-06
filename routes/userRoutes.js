@@ -12,6 +12,7 @@ const {
 const {
   getAllUsers,
   updateAuthenticatedUser,
+  deleteAuthenticatedUser,
 } = require('../controllers/userController');
 
 router.post('/signup', signUp);
@@ -21,6 +22,7 @@ router.patch('/updatepassword', protect, updatePassword);
 
 router.route('/').get(protect, restricTo('admin'), getAllUsers);
 router.patch('/updateAuthenticatedUser', protect, updateAuthenticatedUser);
+router.delete('/deleteAuthenticatedUser', protect, deleteAuthenticatedUser);
 
 router.patch('/resetpassword/:resetToken', resetPassword);
 
