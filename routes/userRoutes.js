@@ -21,8 +21,18 @@ router.post('/forgotpassword', forgotPassword);
 router.patch('/updatepassword', protect, updatePassword);
 
 router.route('/').get(protect, restricTo('admin'), getAllUsers);
-router.patch('/updateAuthenticatedUser', protect, updateAuthenticatedUser);
-router.delete('/deleteAuthenticatedUser', protect, deleteAuthenticatedUser);
+router.patch(
+  '/updateAuthenticatedUser',
+  protect,
+  restricTo('admin', 'user'),
+  updateAuthenticatedUser
+);
+router.delete(
+  '/deleteAuthenticatedUser',
+  protect,
+  restricTo('admin', 'user'),
+  deleteAuthenticatedUser
+);
 
 router.patch('/resetpassword/:resetToken', resetPassword);
 
