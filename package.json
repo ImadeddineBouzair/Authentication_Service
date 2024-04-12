@@ -1,5 +1,5 @@
 {
-  "name": "Authentication with security",
+  "name": "Authentication",
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
@@ -18,7 +18,6 @@
     "helmet": "^7.1.0",
     "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.2",
-    "mailgun.js": "^10.2.1",
     "mongoose": "^8.1.2",
     "morgan": "^1.10.0",
     "nodemailer": "^6.9.10",
